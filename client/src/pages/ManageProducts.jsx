@@ -15,6 +15,7 @@ export default function ManageProducts() {
 
   const initialProduct = { name: "", description: "", category: "", price: "" };
   const [newProduct, setNewProduct] = useState(initialProduct);
+  const [editId, setEditId] = useState(null); // ✅ track editing product
 
   const modalRef = useRef(null);
 
@@ -38,17 +39,43 @@ export default function ManageProducts() {
   const handleCloseModal = () => {
     setShowModal(false);
     setNewProduct(initialProduct);
+    setEditId(null);
   };
 
-  // Add product
-  const handleAddProduct = async (e) => {
+  // Add or Update product
+  const handleSaveProduct = async (e) => {
     e.preventDefault();
     try {
-      const { data } = await axios.post(API, newProduct);
-      setProducts([...products, data]);
-      handleCloseModal(); // ✅ close + reset
+      if (editId) {
+        // ✅ Update
+        const { data } = await axios.put(`${API}/${editId}`, newProduct);
+        setProducts(products.map((p) => (p.product_id === editId ? data : p)));
+      } else {
+        // ✅ Create
+        const { data } = await axios.post(API, newProduct);
+        setProducts([...products, data]);
+      }
+      handleCloseModal();
     } catch (err) {
-      alert(err.response?.data?.error || "Failed to add product");
+      alert(err.response?.data?.error || "Failed to save product");
+    }
+  };
+
+  // Edit product
+  const handleEdit = (product) => {
+    setNewProduct(product);
+    setEditId(product.product_id);
+    setShowModal(true);
+  };
+
+  // Delete product
+  const handleDelete = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this product?")) return;
+    try {
+      await axios.delete(`${API}/${id}`);
+      setProducts(products.filter((p) => p.product_id !== id));
+    } catch (err) {
+      alert(err.response?.data?.error || "Failed to delete product");
     }
   };
 
@@ -70,7 +97,6 @@ export default function ManageProducts() {
     window.addEventListener("keydown", handleEsc);
     document.addEventListener("focus", trapFocus, true);
 
-    // Focus first input when modal opens
     const firstInput = modalRef.current?.querySelector("input, textarea");
     firstInput?.focus();
 
@@ -124,8 +150,9 @@ export default function ManageProducts() {
                   "Price",
                   "Created",
                   "Updated",
+                  "Actions",
                 ].map((head) => (
-                  <th key={head} className="px-6 py-3 font-medium">
+                  <th key={head} className="px-6 py-3 font-bold">
                     {head}
                   </th>
                 ))}
@@ -154,6 +181,20 @@ export default function ManageProducts() {
                   <td className="px-6 py-3 text-sm text-gray-500">
                     {formatDate(p.updated_at)}
                   </td>
+                  <td className="px-6 py-3 flex gap-3">
+                    <button
+                      onClick={() => handleEdit(p)}
+                      className="cursor-pointer rounded-lg bg-blue-500 px-3 py-1 text-xs text-white hover:bg-blue-600"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      onClick={() => handleDelete(p.product_id)}
+                      className="cursor-pointer rounded-lg bg-red-500 px-3 py-1 text-xs text-white hover:bg-red-600"
+                    >
+                      Delete
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -176,10 +217,10 @@ export default function ManageProducts() {
             tabIndex="-1"
           >
             <h2 className="mb-4 text-lg font-semibold text-gray-800">
-              Add New Product
+              {editId ? "Edit Product" : "Add New Product"}
             </h2>
 
-            <form onSubmit={handleAddProduct} className="space-y-4">
+            <form onSubmit={handleSaveProduct} className="space-y-4">
               <input
                 type="text"
                 placeholder="Name"
@@ -231,7 +272,7 @@ export default function ManageProducts() {
                   type="submit"
                   className="cursor-pointer rounded-lg bg-gray-600 px-5 py-2 font-medium text-white hover:bg-gray-700"
                 >
-                  Save
+                  {editId ? "Update" : "Save"}
                 </button>
               </div>
             </form>
