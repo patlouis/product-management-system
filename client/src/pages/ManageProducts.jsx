@@ -1,18 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
+import dayjs from "dayjs";
 
 const API = "http://localhost:3000/api/products";
 
 const formatDate = (date) =>
-  date
-    ? new Date(date).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
-      })
-    : "N/A";
+  date ? dayjs(date).format("MMM D, YYYY h:mm A") : "N/A";
 
 export default function ManageProducts() {
   const [products, setProducts] = useState([]);
@@ -172,7 +165,7 @@ export default function ManageProducts() {
       {showModal && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
-          onClick={handleCloseModal} // ✅ close on backdrop click
+          onClick={handleCloseModal}
         >
           <div
             ref={modalRef}
@@ -229,7 +222,7 @@ export default function ManageProducts() {
               <div className="mt-4 flex justify-end gap-3">
                 <button
                   type="button"
-                  onClick={handleCloseModal} // ✅ close + clear on cancel
+                  onClick={handleCloseModal}
                   className="cursor-pointer rounded-lg border px-4 py-2 text-gray-600 hover:bg-gray-100"
                 >
                   Cancel
