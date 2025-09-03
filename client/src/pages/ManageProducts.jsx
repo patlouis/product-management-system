@@ -1,102 +1,165 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 
-function ManageProducts() {
+const API = "http://localhost:3000/api/products";
+
+const formatDate = (date) =>
+  date
+    ? new Date(date).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+        hour: "2-digit",
+        minute: "2-digit",
+      })
+    : "N/A";
+
+export default function ManageProducts() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showModal, setShowModal] = useState(false);
 
-  // Fetch products from API
+  const initialProduct = { name: "", description: "", category: "", price: "" };
+  const [newProduct, setNewProduct] = useState(initialProduct);
+
+  const modalRef = useRef(null);
+
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const response = await axios.get("http://localhost:3000/api/products");
-        setProducts(Array.isArray(response.data) ? response.data : []);
-      } catch (err) {
-        setError(err.message || "Something went wrong");
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchProducts();
   }, []);
 
+  // Fetch products
+  const fetchProducts = async () => {
+    try {
+      const { data } = await axios.get(API);
+      setProducts(Array.isArray(data) ? data : []);
+    } catch (err) {
+      setError(err.message || "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Close modal + clear form
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setNewProduct(initialProduct);
+  };
+
+  // Add product
+  const handleAddProduct = async (e) => {
+    e.preventDefault();
+    try {
+      const { data } = await axios.post(API, newProduct);
+      setProducts([...products, data]);
+      handleCloseModal(); // ✅ close + reset
+    } catch (err) {
+      alert(err.response?.data?.error || "Failed to add product");
+    }
+  };
+
+  // Modal behavior: Escape key, trap focus
+  useEffect(() => {
+    if (!showModal) return;
+
+    const handleEsc = (e) => {
+      if (e.key === "Escape") handleCloseModal();
+    };
+
+    const trapFocus = (e) => {
+      if (modalRef.current && !modalRef.current.contains(e.target)) {
+        e.stopPropagation();
+        modalRef.current.focus();
+      }
+    };
+
+    window.addEventListener("keydown", handleEsc);
+    document.addEventListener("focus", trapFocus, true);
+
+    // Focus first input when modal opens
+    const firstInput = modalRef.current?.querySelector("input, textarea");
+    firstInput?.focus();
+
+    return () => {
+      window.removeEventListener("keydown", handleEsc);
+      document.removeEventListener("focus", trapFocus, true);
+    };
+  }, [showModal]);
+
   if (loading)
     return (
-      <div className="flex justify-center items-center h-screen">
-        <p className="text-gray-600 text-lg animate-pulse">Loading products...</p>
+      <div className="flex h-screen items-center justify-center">
+        <p className="text-lg text-gray-600 animate-pulse">Loading...</p>
       </div>
     );
 
   if (error)
     return (
-      <div className="flex justify-center items-center h-screen">
-        <p className="text-red-500 font-semibold">Error: {error}</p>
+      <div className="flex h-screen items-center justify-center">
+        <p className="font-semibold text-red-500">Error: {error}</p>
       </div>
     );
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <h1 className="text-2xl font-bold text-gray-800 mb-8 text-center">
-        Manage Products
-      </h1>
+    <div className="mx-auto max-w-6xl p-6">
+      <div className="mb-8 flex items-center justify-between">
+        <h1 className="text-3xl font-bold text-gray-800">Manage Products</h1>
+        <button
+          onClick={() => setShowModal(true)}
+          className="cursor-pointer rounded-xl bg-gray-600 px-5 py-2 font-medium text-white shadow-md transition hover:bg-gray-700"
+        >
+          + Add Product
+        </button>
+      </div>
 
+      {/* Product Table */}
       {products.length === 0 ? (
-        <div className="text-center text-gray-500 bg-gray-50 p-8 rounded-2xl shadow-md">
-          <p className="text-lg">No products found.</p>
+        <div className="rounded-2xl bg-gray-50 p-12 text-center shadow">
+          <p className="text-gray-500">No products found.</p>
         </div>
       ) : (
-        <div className="overflow-x-auto bg-white shadow-xl rounded-2xl border border-gray-100">
-          <table className="w-full text-sm md:text-base border-collapse">
-            <thead>
-              <tr className="bg-gray-50 text-gray-700 text-xs md:text-sm tracking-wider">
-                <th className="px-6 py-4 text-left">ID</th>
-                <th className="px-6 py-4 text-left">Name</th>
-                <th className="px-6 py-4 text-left">Description</th>
-                <th className="px-6 py-4 text-left">Category</th>
-                <th className="px-6 py-4 text-left">Price</th>
-                <th className="px-6 py-4 text-left">Created At</th>
-                <th className="px-6 py-4 text-left">Updated At</th>
+        <div className="overflow-x-auto rounded-2xl border border-gray-200 bg-white shadow">
+          <table className="w-full border-collapse text-sm">
+            <thead className="sticky top-0 bg-gray-100 text-left text-gray-700">
+              <tr>
+                {[
+                  "ID",
+                  "Name",
+                  "Description",
+                  "Category",
+                  "Price",
+                  "Created",
+                  "Updated",
+                ].map((head) => (
+                  <th key={head} className="px-6 py-3 font-medium">
+                    {head}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
               {products.map((p, idx) => (
                 <tr
                   key={p.product_id}
-                  className={`border-t border-gray-100 ${
-                    idx % 2 === 0 ? "bg-white" : "bg-gray-50"
-                  } hover:bg-gray-100 transition-colors`}
+                  className={`transition-colors hover:bg-gray-50 ${
+                    idx % 2 ? "bg-gray-50/50" : "bg-white"
+                  }`}
                 >
-                  <td className="px-6 py-4 text-gray-700">{p.product_id}</td>
-                  <td className="px-6 py-4 font-semibold text-gray-900">
+                  <td className="px-6 py-3 text-gray-700">{p.product_id}</td>
+                  <td className="px-6 py-3 font-semibold text-gray-900">
                     {p.name}
                   </td>
-                  <td className="px-6 py-4 text-gray-600">{p.description}</td>
-                  <td className="px-6 py-4 text-gray-700">{p.category}</td>
-                  <td className="px-6 py-4 text-green-600 font-medium">
+                  <td className="px-6 py-3 text-gray-600">{p.description}</td>
+                  <td className="px-6 py-3 text-gray-700">{p.category}</td>
+                  <td className="px-6 py-3 font-medium text-green-600">
                     ₱{p.price}
                   </td>
-                  <td className="px-6 py-4 text-gray-500 text-sm">
-                    {p.created_at
-                      ? new Date(p.created_at).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })
-                      : "N/A"}
+                  <td className="px-6 py-3 text-sm text-gray-500">
+                    {formatDate(p.created_at)}
                   </td>
-                  <td className="px-6 py-4 text-gray-500 text-sm">
-                    {p.updated_at
-                      ? new Date(p.updated_at).toLocaleDateString("en-US", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                          hour: "2-digit",
-                          minute: "2-digit",
-                        })
-                      : "N/A"}
+                  <td className="px-6 py-3 text-sm text-gray-500">
+                    {formatDate(p.updated_at)}
                   </td>
                 </tr>
               ))}
@@ -104,8 +167,84 @@ function ManageProducts() {
           </table>
         </div>
       )}
+
+      {/* Modal */}
+      {showModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/40"
+          onClick={handleCloseModal} // ✅ close on backdrop click
+        >
+          <div
+            ref={modalRef}
+            role="dialog"
+            aria-modal="true"
+            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+            tabIndex="-1"
+          >
+            <h2 className="mb-4 text-lg font-semibold text-gray-800">
+              Add New Product
+            </h2>
+
+            <form onSubmit={handleAddProduct} className="space-y-4">
+              <input
+                type="text"
+                placeholder="Name"
+                value={newProduct.name}
+                onChange={(e) =>
+                  setNewProduct({ ...newProduct, name: e.target.value })
+                }
+                className="w-full rounded-lg border px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-300"
+                required
+              />
+              <input
+                type="text"
+                placeholder="Category"
+                value={newProduct.category}
+                onChange={(e) =>
+                  setNewProduct({ ...newProduct, category: e.target.value })
+                }
+                className="w-full rounded-lg border px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-300"
+              />
+              <input
+                type="number"
+                placeholder="Price (₱)"
+                value={newProduct.price}
+                onChange={(e) =>
+                  setNewProduct({ ...newProduct, price: e.target.value })
+                }
+                className="w-full rounded-lg border px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-300"
+                required
+              />
+              <textarea
+                placeholder="Description"
+                value={newProduct.description}
+                onChange={(e) =>
+                  setNewProduct({ ...newProduct, description: e.target.value })
+                }
+                rows="3"
+                className="w-full resize-none rounded-lg border px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-300"
+              />
+
+              <div className="mt-4 flex justify-end gap-3">
+                <button
+                  type="button"
+                  onClick={handleCloseModal} // ✅ close + clear on cancel
+                  className="cursor-pointer rounded-lg border px-4 py-2 text-gray-600 hover:bg-gray-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="cursor-pointer rounded-lg bg-gray-600 px-5 py-2 font-medium text-white hover:bg-gray-700"
+                >
+                  Save
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
-
-export default ManageProducts;
