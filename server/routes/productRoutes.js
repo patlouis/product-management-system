@@ -16,23 +16,23 @@ router.get("/", async (req, res) => {
 
 // Create product
 router.post("/", async (req, res) => {
-  const { name, description, category, price } = req.body;
-  if (!name || !description || category == null || price == null) {
+  const { name, description, category_id, price } = req.body;
+  if (!name || !description || !category_id || price == null) {
     return res.status(400).json({ error: "All fields are required" });
   }
 
   try {
     const db = await connectToDatabase();
     const [result] = await db.query(
-      "INSERT INTO products (name, description, category, price) VALUES (?, ?, ?, ?)",
-      [name, description, category, price]
+      "INSERT INTO products (name, description, category_id, price) VALUES (?, ?, ?, ?)",
+      [name, description, category_id, price]
     );
 
     res.status(201).json({
       product_id: result.insertId,
       name,
       description,
-      category,
+      category_id,
       price,
       created_at: new Date(),
       updated_at: new Date(),
@@ -45,13 +45,13 @@ router.post("/", async (req, res) => {
 // Update product
 router.put("/:id", async (req, res) => {
   const { id } = req.params;
-  const { name, description, category, price } = req.body;
+  const { name, description, category_id, price } = req.body;
 
   try {
     const db = await connectToDatabase();
     const [result] = await db.query(
-      "UPDATE products SET name = ?, description = ?, category = ?, price = ?, updated_at = NOW() WHERE product_id = ?",
-      [name, description, category, price, id]
+      "UPDATE products SET name = ?, description = ?, category_id = ?, price = ?, updated_at = NOW() WHERE product_id = ?",
+      [name, description, category_id, price, id]
     );
 
     if (result.affectedRows === 0) {

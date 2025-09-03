@@ -13,9 +13,9 @@ export default function ManageProducts() {
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
 
-  const initialProduct = { name: "", description: "", category: "", price: "" };
+  const initialProduct = { name: "", description: "", category_id: "", price: "" };
   const [newProduct, setNewProduct] = useState(initialProduct);
-  const [editId, setEditId] = useState(null); // ✅ track editing product
+  const [editId, setEditId] = useState(null);
 
   const modalRef = useRef(null);
 
@@ -171,7 +171,7 @@ export default function ManageProducts() {
                     {p.name}
                   </td>
                   <td className="px-6 py-3 text-gray-600">{p.description}</td>
-                  <td className="px-6 py-3 text-gray-700">{p.category}</td>
+                  <td className="px-6 py-3 text-gray-700">{p.category_id}</td>
                   <td className="px-6 py-3 font-medium text-green-600">
                     ₱{p.price}
                   </td>
@@ -234,9 +234,9 @@ export default function ManageProducts() {
               <input
                 type="text"
                 placeholder="Category"
-                value={newProduct.category}
+                value={newProduct.category_id}
                 onChange={(e) =>
-                  setNewProduct({ ...newProduct, category: e.target.value })
+                  setNewProduct({ ...newProduct, category_id: e.target.value })
                 }
                 className="w-full rounded-lg border px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-300"
               />
