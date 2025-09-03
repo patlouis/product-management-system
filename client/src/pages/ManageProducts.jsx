@@ -13,7 +13,13 @@ export default function ManageProducts() {
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
 
-  const initialProduct = { name: "", description: "", category_id: "", price: "" };
+  const initialProduct = {
+    name: "",
+    description: "",
+    category_id: "",
+    price: "",
+  };
+
   const [newProduct, setNewProduct] = useState(initialProduct);
   const [editId, setEditId] = useState(null);
 
@@ -47,13 +53,13 @@ export default function ManageProducts() {
     e.preventDefault();
     try {
       if (editId) {
-        // ✅ Update
-        const { data } = await axios.put(`${API}/${editId}`, newProduct);
-        setProducts(products.map((p) => (p.product_id === editId ? data : p)));
+        // ✅ Update → refresh list
+        await axios.put(`${API}/${editId}`, newProduct);
+        await fetchProducts();
       } else {
-        // ✅ Create
+        // ✅ Create → append inline
         const { data } = await axios.post(API, newProduct);
-        setProducts([...products, data]);
+        setProducts((prev) => [...prev, data]);
       }
       handleCloseModal();
     } catch (err) {
@@ -63,7 +69,12 @@ export default function ManageProducts() {
 
   // Edit product
   const handleEdit = (product) => {
-    setNewProduct(product);
+    setNewProduct({
+      name: product.name || "",
+      description: product.description || "",
+      category_id: product.category_id || "",
+      price: product.price || "",
+    });
     setEditId(product.product_id);
     setShowModal(true);
   };
@@ -73,7 +84,7 @@ export default function ManageProducts() {
     if (!window.confirm("Are you sure you want to delete this product?")) return;
     try {
       await axios.delete(`${API}/${id}`);
-      setProducts(products.filter((p) => p.product_id !== id));
+      setProducts((prev) => prev.filter((p) => p.product_id !== id));
     } catch (err) {
       alert(err.response?.data?.error || "Failed to delete product");
     }
