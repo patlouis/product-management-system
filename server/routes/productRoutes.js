@@ -3,7 +3,6 @@ import { connectToDatabase } from "../lib/database.js";
 
 const router = express.Router();
 
-// Get all products
 // Get all products with category name
 router.get("/", async (req, res) => {
   try {
@@ -14,6 +13,7 @@ router.get("/", async (req, res) => {
              c.name AS category_name
       FROM products p
       JOIN categories c ON p.category_id = c.category_id
+      ORDER BY p.name ASC;
     `);
     res.json(products);
   } catch (err) {

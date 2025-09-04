@@ -51,7 +51,7 @@ export default function ManageCategories() {
         );
       } else {
         const { data } = await axios.post(API, newCategory);
-        setCategories((prev) => [...prev, data]);
+        setCategories((prev) => [...prev, { ...data, products: 0 }]);
       }
       handleCloseModal();
     } catch (err) {

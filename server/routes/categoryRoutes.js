@@ -8,11 +8,13 @@ router.get("/", async (req, res) => {
   try {
     const db = await connectToDatabase();
     const [categories] = await db.query(`
-      SELECT c.category_id, c.name, c.created_at, c.updated_at,
-             COUNT(p.product_id) AS products
-      FROM categories c
-      LEFT JOIN products p ON c.category_id = p.category_id
-      GROUP BY c.category_id, c.name, c.created_at, c.updated_at`);
+    SELECT c.category_id, c.name, c.created_at, c.updated_at,
+          COUNT(p.product_id) AS products
+    FROM categories c
+    LEFT JOIN products p ON c.category_id = p.category_id
+    GROUP BY c.category_id
+    ORDER BY c.name ASC;
+    `);
     res.json(categories);
   } catch (err) {
     res.status(500).json({ error: err.message });
