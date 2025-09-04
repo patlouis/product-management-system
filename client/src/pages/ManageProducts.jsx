@@ -68,6 +68,7 @@ export default function ManageProducts() {
         const { data } = await axios.post(API, newProduct);
         setProducts((prev) => [...prev, data]);
       }
+      await fetchProducts();
       handleCloseModal();
     } catch (err) {
       alert(err.response?.data?.error || "Failed to save product");

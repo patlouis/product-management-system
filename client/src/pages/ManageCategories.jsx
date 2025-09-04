@@ -53,6 +53,7 @@ export default function ManageCategories() {
         const { data } = await axios.post(API, newCategory);
         setCategories((prev) => [...prev, { ...data, products: 0 }]);
       }
+      await fetchCategories();
       handleCloseModal();
     } catch (err) {
       alert(err.response?.data?.error || "Failed to save category");
