@@ -3,6 +3,6 @@
 A full-stack web application for managing products, and categories. Features include creating, updating, deleting, and viewing products, and categorizing items.
 
 ### Preview
-<img width="958" height="408" alt="image" src="https://github.com/user-attachments/assets/761a8c3d-c0f1-4177-ba76-5a99f19a02f9" />
-<img width="958" height="408" alt="image" src="https://github.com/user-attachments/assets/226d0886-5ab6-4f7b-a1ae-52d5e588fad5" />
+<img width="943" height="402" alt="image" src="https://github.com/user-attachments/assets/1f6c9b62-aa23-458f-b6f9-f51880593efe" />
+<img width="943" height="402" alt="image" src="https://github.com/user-attachments/assets/41b4418a-7983-4d86-b75e-c7e7000de5c6" />
 
