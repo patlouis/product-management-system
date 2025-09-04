@@ -141,7 +141,7 @@ export default function ManageCategories() {
           <table className="w-full border-collapse text-sm">
             <thead className="sticky top-0 bg-gray-100 text-left text-gray-700">
               <tr>
-                {["ID", "Name", "Created", "Updated", "Actions"].map((head) => (
+                {["ID", "Name", "Products", "Created", "Updated", "Actions"].map((head) => (
                   <th key={head} className="px-6 py-3 font-bold">
                     {head}
                   </th>
@@ -160,6 +160,7 @@ export default function ManageCategories() {
                   <td className="px-6 py-3 font-semibold text-gray-900">
                     {c.name}
                   </td>
+                  <td className="px-6 py-3 text-gray-700">{c.products}</td>
                   <td className="px-6 py-3 text-sm text-gray-500">
                     {formatDate(c.created_at)}
                   </td>
