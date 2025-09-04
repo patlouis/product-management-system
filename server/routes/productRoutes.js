@@ -4,10 +4,17 @@ import { connectToDatabase } from "../lib/database.js";
 const router = express.Router();
 
 // Get all products
+// Get all products with category name
 router.get("/", async (req, res) => {
   try {
     const db = await connectToDatabase();
-    const [products] = await db.query("SELECT * FROM products");
+    const [products] = await db.query(`
+      SELECT p.product_id, p.name, p.description, p.price, 
+             p.category_id, p.created_at, p.updated_at,
+             c.name AS category_name
+      FROM products p
+      JOIN categories c ON p.category_id = c.category_id
+    `);
     res.json(products);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -25,7 +32,7 @@ router.post("/", async (req, res) => {
     const db = await connectToDatabase();
     const [result] = await db.query(
       "INSERT INTO products (name, description, category_id, price) VALUES (?, ?, ?, ?)",
-      [name, description, category_id, price]
+      [name, description, Number(category_id), Number(price)]
     );
 
     res.status(201).json({

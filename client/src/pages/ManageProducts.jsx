@@ -3,12 +3,14 @@ import axios from "axios";
 import dayjs from "dayjs";
 
 const API = "http://localhost:3000/api/products";
+const CATEGORY_API = "http://localhost:3000/api/categories";
 
 const formatDate = (date) =>
   date ? dayjs(date).format("MMM D, YYYY h:mm A") : "N/A";
 
 export default function ManageProducts() {
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showModal, setShowModal] = useState(false);
@@ -27,6 +29,7 @@ export default function ManageProducts() {
 
   useEffect(() => {
     fetchProducts();
+    fetchCategories();
   }, []);
 
   // Fetch products
@@ -38,6 +41,16 @@ export default function ManageProducts() {
       setError(err.message || "Something went wrong");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Fetch categories
+  const fetchCategories = async () => {
+    try {
+      const { data } = await axios.get(CATEGORY_API);
+      setCategories(Array.isArray(data) ? data : []);
+    } catch (err) {
+      console.error("Failed to fetch categories:", err);
     }
   };
 
@@ -53,11 +66,9 @@ export default function ManageProducts() {
     e.preventDefault();
     try {
       if (editId) {
-        // ✅ Update → refresh list
         await axios.put(`${API}/${editId}`, newProduct);
         await fetchProducts();
       } else {
-        // ✅ Create → append inline
         const { data } = await axios.post(API, newProduct);
         setProducts((prev) => [...prev, data]);
       }
@@ -108,7 +119,7 @@ export default function ManageProducts() {
     window.addEventListener("keydown", handleEsc);
     document.addEventListener("focus", trapFocus, true);
 
-    const firstInput = modalRef.current?.querySelector("input, textarea");
+    const firstInput = modalRef.current?.querySelector("input, textarea, select");
     firstInput?.focus();
 
     return () => {
@@ -182,7 +193,7 @@ export default function ManageProducts() {
                     {p.name}
                   </td>
                   <td className="px-6 py-3 text-gray-600">{p.description}</td>
-                  <td className="px-6 py-3 text-gray-700">{p.category_id}</td>
+                  <td className="px-6 py-3 text-gray-700">{p.category_name}</td>
                   <td className="px-6 py-3 font-medium text-green-600">
                     ₱{p.price}
                   </td>
@@ -242,15 +253,24 @@ export default function ManageProducts() {
                 className="w-full rounded-lg border px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-300"
                 required
               />
-              <input
-                type="text"
-                placeholder="Category"
+
+              {/* Category Dropdown */}
+              <select
                 value={newProduct.category_id}
                 onChange={(e) =>
                   setNewProduct({ ...newProduct, category_id: e.target.value })
                 }
                 className="w-full rounded-lg border px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-300"
-              />
+                required
+              >
+                <option value="">Select Category</option>
+                {categories.map((cat) => (
+                  <option key={cat.category_id} value={cat.category_id}>
+                    {cat.name}
+                  </option>
+                ))}
+              </select>
+
               <input
                 type="number"
                 placeholder="Price (₱)"
@@ -261,6 +281,7 @@ export default function ManageProducts() {
                 className="w-full rounded-lg border px-3 py-2 focus:border-blue-500 focus:ring-1 focus:ring-blue-300"
                 required
               />
+
               <textarea
                 placeholder="Description"
                 value={newProduct.description}
